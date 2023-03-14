@@ -113,11 +113,13 @@ def RegistrationPage():
 
 @app.route("/" ,methods=["GET"])
 def HomePage():
-    if session['login_user'] == 'login':
-        name = " abble to Test "
-        return render_template('Home.html',name=name)
-    else:
-        return render_template('Home.html')
+    if session.get('login_user'):
+        if session['login_user'] == 'login':
+            name = " abble to Test "
+            return render_template('Home.html',name=name)
+        else:
+            return render_template('Home.html')
+    return render_template('Home.html')
 
    
 
