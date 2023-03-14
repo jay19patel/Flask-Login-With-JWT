@@ -48,3 +48,9 @@
  - when login then session create and then we use test other vise not use Test page 
 
 
+## redirect when token expire or unwanted url calls 
+ ```
+ @jwt.expired_token_loader
+def handle_expired_token(jwt_header, jwt_payload):
+    return redirect(url_for('LoginPage')) 
+```
