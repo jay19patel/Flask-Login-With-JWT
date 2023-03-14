@@ -1,8 +1,8 @@
 
 
-from flask import Flask,render_template,request,session,redirect,url_for,flash
+from flask import Flask,render_template,request,session,redirect,url_for,flash,jsonify
 from pymongo import MongoClient # mongodb 
-from flask_jwt_extended import create_access_token,get_jwt_identity,jwt_required,JWTManager,set_access_cookies
+from flask_jwt_extended import create_access_token,get_jwt_identity,jwt_required,JWTManager,set_access_cookies,unset_jwt_cookies
 from datetime import timedelta
 import requests
 
@@ -12,18 +12,22 @@ app.secret_key = 'jaypateltopsecret789654123'
 app.config["JWT_SECRET_KEY"] = "jaypateltopsecret789654123" 
 app.config['JWT_COOKIE_CSRF_PROTECT'] = False
 app.config['JWT_TOKEN_LOCATION'] = ['cookies']
-app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(minutes=60) 
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(seconds=10) 
 jwt = JWTManager(app)
 
 client = MongoClient('localhost', 27017) # connection 
 db = client.Website # create table
 regapi = db.Userdata # triger
 
-# when token expire then redirect autometic 
+# expire token 
 @jwt.expired_token_loader
 def handle_expired_token(jwt_header, jwt_payload):
-    return redirect(url_for('LoginPage')) 
+    return redirect(url_for('LoginPage'))  
 
+
+@jwt.unauthorized_loader
+def custom_unauthorized_response(_err):
+    return redirect(url_for('LoginPage'))
 
 @app.route('/login',methods=['GET','POST'])
 def LoginPage():
@@ -36,8 +40,6 @@ def LoginPage():
             flash("Email id not Founed Please Check Email id ")
             return redirect(url_for('LoginPage'))
         else:
-            print("encripted  password:",userdata['password']) 
-            print("real password:",pwd) 
             newpwd = pwd[::-1]+pwd[::-1]+pwd
             if userdata['password'] == newpwd:
                 print("login done ....")
@@ -50,7 +52,7 @@ def LoginPage():
                 # access_token = create_access_token(identity='Sallubhai')
                 res = redirect(url_for('HomePage'))
                 set_access_cookies(res, access_token) 
-                session['login_user'] = userdata['name']
+                session['login_user'] = "login"
                 print("Loged in......")     
                 return res
                
@@ -67,10 +69,13 @@ def LoginPage():
 
 
 @app.route('/logout',methods=['GET','POST'])
+
 @jwt_required()
 def Logout():
+    res = jsonify({"message":"logout"})
+    unset_jwt_cookies(res)
     session.clear()
-    session['login_user']=''
+    session['login_user']='logout'
     print("loged out...")
     flash("You are logout Login New ID ")
     return redirect(url_for('HomePage'))
@@ -108,10 +113,8 @@ def RegistrationPage():
 
 @app.route("/" ,methods=["GET"])
 def HomePage():
-    session['login_user']= {'login':False}
-    if 'name' in session['login_user']:
-        name = session['login_user']
-        print(name)
+    if session['login_user'] == 'login':
+        name = " abble to Test "
         return render_template('Home.html',name=name)
     else:
         return render_template('Home.html')
@@ -121,7 +124,7 @@ def HomePage():
 @app.route('/test')
 @jwt_required()
 def TestPage():
-    if session['login_user']:
+    if session['login_user'] == 'login':
         print("Loged in Test......")  
         data = get_jwt_identity()
         name = data['name']
@@ -130,7 +133,7 @@ def TestPage():
         print(session['login_user'])
         return render_template('Test.html',name=name,email=email,city=city)
     else:
-        print(" Not Loged in......") 
+        print(" Not Loged in...... session ni male ") 
         flash("You are not Log in, Login and then use TEST Page ")
         return redirect(url_for('LoginPage'))
     
