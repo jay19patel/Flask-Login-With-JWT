@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<section>
+   <h1>Test</h1>
+   {% if name %}
+   <hr><hr>
+   <h2>Candidate Name : {{name}}</h2>
+   <h2>Candidate Email : {{email}}</h2>
+   <h2>Candidate City  : {{city}}</h2>
+   <hr><hr>
+   <br>
+   <button> start exam :) </button>
+   {% else %}
+   <h1>YOU ARE NOT LOGIN BRO </h1>
+   {% endif %}
+</section>
+{% endblock %}
+
