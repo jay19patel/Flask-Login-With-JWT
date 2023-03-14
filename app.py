@@ -19,6 +19,12 @@ client = MongoClient('localhost', 27017) # connection
 db = client.Website # create table
 regapi = db.Userdata # triger
 
+# when token expire then redirect autometic 
+@jwt.expired_token_loader
+def handle_expired_token(jwt_header, jwt_payload):
+    return redirect(url_for('LoginPage')) 
+
+
 @app.route('/login',methods=['GET','POST'])
 def LoginPage():
     error =None
